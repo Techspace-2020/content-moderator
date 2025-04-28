@@ -1,2 +1,6 @@
-fastapi==0.99.0
+fastapi
 mangum
+uvicorn
+phi
+python-dotenv
+phidata
