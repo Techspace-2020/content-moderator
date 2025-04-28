@@ -4,3 +4,4 @@ uvicorn
 phi
 python-dotenv
 phidata
+pydantic==1.10.2
