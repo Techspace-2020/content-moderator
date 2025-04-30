@@ -6,6 +6,7 @@ from phi.tools.newspaper_tools import NewspaperTools
 from phi.tools.website import WebsiteTools
 from phi.tools.yfinance import YFinanceTools
 from phi.tools.wikipedia import WikipediaTools
+import google.generativeai as genai
 
 from dotenv import load_dotenv
 
@@ -18,7 +19,9 @@ import uvicorn
 load_dotenv()
 
 # Retrieve the API key from the environment variable
-GOOGLE_API_KEY= "AIzaSyDJaDmmsu3N_nAMx0QjSKC15gido884ekU"
+#GOOGLE_API_KEY= "AIzaSyDJaDmmsu3N_nAMx0QjSKC15gido884ekU"
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 # Create the Fake News Classification agent
