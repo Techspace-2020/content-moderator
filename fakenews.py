@@ -18,9 +18,7 @@ import uvicorn
 load_dotenv()
 
 # Retrieve the API key from the environment variable
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY is not set in the environment variables")
+GOOGLE_API_KEY= "AIzaSyDJaDmmsu3N_nAMx0QjSKC15gido884ekU"
 
 
 # Create the Fake News Classification agent
