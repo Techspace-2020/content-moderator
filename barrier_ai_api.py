@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import hashlib
 import diskcache
 import json  # Ensure JSON module is imported
+import re
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -105,6 +106,10 @@ fake_news_agent = Agent(
                 - `Likely True`: If the trust score is above 80%.
                 - `Unverified`: If the trust score is between 50% and 80%.
                 - `Likely Fake`: If the trust score is below 50%.
+                - `Needs Review`: If the trust score is between 40% and 50%, indicating that further verification is required.
+                - `Highly Unlikely`: If the trust score is below 30%, suggesting that the content is very likely to be false.
+                - `Verified`: If the content has been cross-checked with multiple reliable sources and confirmed to be true.
+                - `Disputed`: If the content has conflicting information from different sources, requiring careful consideration.
 
             15. **Verify Financial statements**
                 - To handle all financial-related queries, use YFinanceTools exclusively. This tool is designed to provide up-to-date and accurate information on stock prices, market data, financial metrics, and expert recommendations. Whether you're looking for real-time stock prices, historical performance, or market trends, YFinanceTools is the go-to resource. For stock analysis, it also offers buy, hold, or sell recommendations from analysts, along with key metrics like P/E ratios, dividend yields, and earnings reports. Simply input your query related to any financial data—be it about stocks, market performance, or recommendations—and let YFinanceTools deliver the most reliable information available. For all financial-related matters, YFinanceTools ensures that you get precise and current data, making it your primary tool for any financial verification.
@@ -203,28 +208,60 @@ fake_news_agent = Agent(
                     2: Medium Risk / Harmful: Clear violation of policy with potential for harm (e.g., harassment, scams, significant misinformation, non-graphic hate speech, regulated goods violations).
                     3: High Risk / Severe Harm: Content is illegal or poses an immediate or severe threat (e.g., CSAM, terrorism, incitement to serious violence, NCII, dangerous misinformation with high impact potential).
 
-                Important Considerations:
-                    Context is Crucial: 
-                        News reporting, educational content, artistic expression, or condemnation of harmful acts often requires different handling than promotion or glorification.
-                    Intent Matters: 
-                        Was the content intended to harm, deceive, incite, or exploit?
-                    Severity & Scale: 
-                        How explicit, graphic, or widespread is the content? What is the potential real-world impact?
-                    Regional & Legal Differences: 
-                        Laws and cultural norms vary, potentially affecting categorization and risk level.
-                    Platform Policies: 
-                        Specific platform rules will dictate the exact definitions and actions taken for each category.
+                    **Risk Levels:**
+                        - **0** - No Risk: Content is safe and does not fall into any unsafe categories.
+                        - **1** - Low Risk: Content may be harmful but not inherently dangerous.
+                        - **2** - Medium Risk: Content falls into categories that may be harmful but does not require immediate moderation.
+                        - **3** - High Risk: Content is harmful or dangerous and requires immediate action.
 
-                **Risk Levels:**
-                - **0** - No Risk: Content is safe and does not fall into any unsafe categories.
-                - **1** - Low Risk: Content may be harmful but not inherently dangerous.
-                - **2** - Medium Risk: Content falls into categories that may be harmful but does not require immediate moderation.
-                - **3** - High Risk: Content is harmful or dangerous and requires immediate action.
+                17. Types of Fake news/flase information:
+                    1. Clickbait
+                        These are stories that are deliberately fabricated to gain more website visitors and increase advertising revenue for websites. Clickbait stories use sensationalist headlines to grab attention and drive click-throughs to the publisher website, normally at the expense of truth or accuracy.
+                    2. Propaganda
+                        Stories that are created to deliberately mislead audiences, promote a biased point of view or particular political cause or agenda.
+                    3. Satire/Parody
+                        Lots of websites and social media accounts publish fake news stories for entertainment and parody. For example; The Onion, Waterford Whispers, The Daily Mash, etc.
+                    4. Sloppy Journalism
+                        Sometimes reporters or journalists may publish a story with unreliable information or without checking all of the facts which can mislead audiences. For example, during the U.S. elections, fashion retailer Urban Outfitters published an Election Day Guide, the guide contained incorrect information telling voters that they needed a ‘voter registration card’. This is not required by any state in the U.S. for voting.
+                    5. Misleading Headings
+                        Stories that are not completely false can be distorted using misleading or sensationalist headlines. These types of news can spread quickly on social media sites where only headlines and small snippets of the full article are displayed on audience newsfeeds.
+                    6. Biased/Slanted News
+                        Many people are drawn to news or stories that confirm their own beliefs or biases and fake news can prey on these biases. Social media news feeds tend to display news and articles that they think we will like based on our personalised searches.
+                    7. Imposter Content
+                        When genuine sources are impersonated with false, made-up sources. This is dangerous as it relates to information with no factual basis being presented in the style of a credible news source or article to make it look like a legitimate source.
+                    8. Manipulated Content
+                        When real information or imagery is manipulated to deceive, as with a doctored photo or video. This can be used to mislead people or create a false narrative about something or someone. 
+
+                    **How to spot False Information?**
+                    1.Who is sharing the story?
+                        Check if the the social media account sharing the post is verified. Most public figures and media outlets display a “blue badge or check mark” which means the account has been authenticated. This can mean the content of the post is more likely to be reliable, although not always. 
+                    2. Take a closer look
+                        Check the source of the story, do you recognise the website? Is it a credible/reliable source? If you are unfamiliar with the site, look in the about section or find out more information about the author.
+                    3. Look beyond the headline 
+                        Check the entire article, many fake news stories use sensationalist or shocking headlines to grab attention. Often the headlines of fake new stories are in all caps and use exclamation points.
+                    4. Check other sources
+                        Are other reputable news/media outlets reporting on the story? Are there any sources in the story? If so, check they are reliable or if they even exist!
+                    5. Check the facts
+                        Stories with false information often contain incorrect dates or altered timelines. It is also a good idea to check when the article was published, is it current or an old news story?
+                    6. Check your biases
+                        Are your own views or beliefs affecting your judgement of a news feature or report?
+                    7. Is it a joke?
+                        Satirical sites are popular online and sometimes it is not always clear whether a story is just a joke or parody… Check the website, is it known for satire or creating funny stories?
+
+                    **Fact checking sites**
+                    Snopes: snopes.com/
+                    PolitiFact: politifact.com
+                    Fact Check: factcheck.org/
+                    BBC Reality Check: bbc.com/news/reality-check
+                    Channel 4 Fact Check: channel4.com/news/factcheck
+                    Reverse image search from Google: google.com/reverse-image-search
+            
+                
     """,
     expected_output="""
                 {   
-                    "classification": "<Likely True | Unverified | Likely Fake>",
-                    "score": "<numerical trust score from 0 to 100>",
+                    "classification": "<Likely True | Unverified | Likely Fake | Needs Review | Highly Unlikely | Verified | Disputed>",
+                    "score": "<numerical trust score from 0% to 100%>",
                     "top_related_urls": [
                         "<URL 1>",
                         "<URL 2>",
@@ -291,6 +328,7 @@ app = FastAPI()
 ALLOWED_ORIGINS = [
     "http://localhost:8000",  # Local frontend (React, etc.)
     "http://127.0.0.1:8000",
+    "http://localhost:5000",  # chat room url
     "chrome-extension://bgkimgppeklbopjofjaaihhhocgnappk",
     # Add your production frontend domain(s) here:
     # "https://your-frontend-domain.com",
@@ -334,6 +372,13 @@ def factcheck_message(message: str):
         try:
             return json.loads(response.content.strip("```json\n"))
         except json.JSONDecodeError:
+            # If the output is the fallback error message, do not cache it
+            if (
+                response.content.strip()
+                == '{"type": "text", "data": "The response could not be processed. Please try again."}'
+            ):
+                # Return a special value to indicate no-cache
+                raise ValueError("Do not cache this output")
             return response.content.strip()
     return response.content
 
@@ -341,23 +386,95 @@ def factcheck_message(message: str):
 @app.post("/analyze")
 def analyze_message(input: MessageInput):
     try:
-        # --- Caching for classification ---
+        # --- Classification without caching if response is invalid ---
         classification_result = classify_message(input.message)
 
         # Check the classification result
         if classification_result["classification"] == "General/Chit-Chat":
-            return {
+            response = {
                 "type": "text",
-                "data": "I am BARRIER AI, designed to fact-check claims, analyze news articles, and assess the credibility of social media content in real-time.",
+                "data": "I am BARRIER AI, designed to fact-check claims. The one you selected looks like Chit-Chat."
             }
+            return response
 
         if classification_result["classification"] == "Claim/News/Article/Statement":
-            factcheck_result = factcheck_message(input.message)
-            if isinstance(factcheck_result, dict):
-                return {"type": "json", "data": factcheck_result}
-            return {"type": "text", "data": factcheck_result}
+            try:
+                factcheck_result = factcheck_message(input.message)
+            except ValueError:
+                # Return the fallback error message directly, do not cache
+                return {
+                    "type": "text",
+                    "data": "The response could not be processed. Please try again.",
+                }
+            parsed_result = None
+
+            if isinstance(factcheck_result, str):
+                try:
+                    # Improved regex to remove markdown code block markers and whitespace
+                    cleaned = re.sub(
+                        r"^```json\s*|^```\s*|```$",
+                        "",
+                        factcheck_result.strip(),
+                        flags=re.MULTILINE,
+                    ).strip()
+                    # Extract the first JSON object from the string, even if there is text before/after
+                    match = re.search(r"({[\s\S]*})", cleaned)
+                    if match:
+                        json_str = match.group(1)
+                        parsed_result = json.loads(json_str)
+                    else:
+                        raise json.JSONDecodeError("No JSON object found", cleaned, 0)
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error: {e}\nCleaned string: {cleaned}")
+                    return {
+                        "type": "text",
+                        "data": "The response could not be processed. Please try again.",
+                    }
+            elif isinstance(factcheck_result, dict):
+                parsed_result = factcheck_result
+
+            if parsed_result:
+                # Validate the parsed result to ensure it contains expected keys
+                required_keys = [
+                    "classification",
+                    "score",
+                    "top_related_urls",
+                    "related_fact",
+                    "risk_level",
+                    "unsafe_categories",
+                    "reason_for_unsafe_classification",
+                ]
+                if all(key in parsed_result for key in required_keys):
+                    response = {
+                        "type": "json",
+                        "data": {
+                            "classification": parsed_result.get(
+                                "classification", "Unknown"
+                            ),
+                            "score": parsed_result.get("score", 0),
+                            "top_related_urls": parsed_result.get(
+                                "top_related_urls", []
+                            ),
+                            "related_fact": parsed_result.get("related_fact", ""),
+                            "risk_level": parsed_result.get("risk_level", 0),
+                            "unsafe_categories": parsed_result.get(
+                                "unsafe_categories", []
+                            ),
+                            "reason_for_unsafe_classification": parsed_result.get(
+                                "reason_for_unsafe_classification", ""
+                            ),
+                        },
+                    }
+                    return response
+
+            # Avoid caching invalid responses
+            return {
+                "type": "text",
+                "data": "The response could not be processed. Please try again.",
+            }
 
     except Exception as e:
+        # Avoid caching exceptions
         raise HTTPException(status_code=500, detail=str(e))
 
 
