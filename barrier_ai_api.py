@@ -37,6 +37,9 @@ fake_news_agent = Agent(
     # model=Gemini(id="gemini-2.0-flash"),  # 15 RPM, 1500 req/day
     # model=Gemini(id="gemini-2.5-pro-exp-03-25"),  # 5 RPM, 25 req/day
     model=Gemini(id="gemini-2.5-flash-preview-04-17"),  # 10 RPM, 500 req/day
+    # model=Gemini(id="gemini-1.5-pro"),
+    # model=OpenAIChat(id="o4-mini-2025-04-16"),
+    # reasoning=True,
     tools=[
         DuckDuckGoTools(search=True, news=True),
         NewspaperTools(),
@@ -100,7 +103,7 @@ fake_news_agent = Agent(
                 - Check platforms like Twitter and Reddit to see if the claim has been debunked or flagged by other users.
 
             13. **Assign Trust Score**
-                - Based on source credibility, author legitimacy, headline style, fact-check alignment, and sentiment neutrality, assign a trust score ranging from 0 to 100.
+                - Based on source credibility, author legitimacy, headline style, fact-check alignment, and sentiment neutrality, assign a trust score ranging from 0% to 100%.
 
             14. **Classify Content**
                 - `Likely True`: If the trust score is above 80%.
@@ -259,6 +262,8 @@ fake_news_agent = Agent(
                 
     """,
     expected_output="""
+                Respond ONLY with a valid JSON matching this structure and Do not add any explanation. Return only JSON.
+
                 {   
                     "classification": "<Likely True | Unverified | Likely Fake | Needs Review | Highly Unlikely | Verified | Disputed>",
                     "score": "<numerical trust score from 0% to 100%>",
@@ -273,7 +278,7 @@ fake_news_agent = Agent(
                         "<list of flagged categories, e.g., \"Hate Speech\", \"Misinformation\">"
                     ],
                     "reason_for_unsafe_classification": "<explanation of why the content is flagged as unsafe>"
-                    }
+                }
                 """,
     description="BARRIER AI is an intelligent, autonomous agent designed to fact-check claims, analyze news articles, and assess the credibility of social media content in real-time. Using advanced natural language processing (NLP) and integrated fact-checking tools, BARRIER AI verifies content against reliable sources and identifies harmful or unsafe categories. The agent autonomously determines whether a statement is true, false, or unverified, and assigns a risk level based on potential harm. It ensures transparency by providing evidence-based reasoning and detailed outputs.",
     goal="The agents main goal is to analyze provided statements, articles, or claims to determine their factual accuracy based on verifiable information. It should also assess the content for any harmful or unsafe categories, assigning an appropriate risk level. Based on this analysis, BARRIER AI classifies the content as Likely True, Unverified, or Likely Fake, and assigns a numerical trust score reflecting the degree of confidence in the classification.",
@@ -285,10 +290,10 @@ fake_news_agent = Agent(
 input_classifier_agent = Agent(
     add_name_to_instructions=True,
     debug_mode=True,
-    # model=Gemini(id="gemini-2.0-flash"),  # Lightweight model for faster classification
-    model=Gemini(
-        id="gemini-2.0-flash-lite"
-    ),  # Even lighter model for basic classification tasks 30 RPM, 1500 req/day
+    model=Gemini(id="gemini-2.0-flash-lite"),
+    # model=Gemini(id="gemini-2.5-flash-preview-04-17"),
+    # model=Gemini(id="gemini-1.5-flash"),
+    # model=OpenAIChat(id="gpt-4o"),
     markdown=True,
     name="InputClassifier",
     instructions="""
@@ -297,6 +302,8 @@ input_classifier_agent = Agent(
         - General/Chit-Chat: If the input is a casual conversation or unrelated to fact-checking.
     """,
     expected_output="""
+            Respond ONLY with a valid JSON matching this structure and Do not add any explanation. Return only JSON.
+
         {
             "classification": "<Claim/News/Article/Statement | General/Chit-Chat>"
         }
