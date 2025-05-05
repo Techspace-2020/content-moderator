@@ -338,6 +338,7 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:5000",  # chat room url
     "http://127.0.0.1:5000",
+    "http://13.51.45.209:9000/analyze",
     "chrome-extension://bgkimgppeklbopjofjaaihhhocgnappk",
     # Add your production frontend domain(s) here:
     # "https://your-frontend-domain.com",
