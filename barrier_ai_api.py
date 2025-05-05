@@ -332,10 +332,12 @@ class ResponseOutput(BaseModel):
 app = FastAPI()
 
 # Set CORS policy: allow only trusted frontend origins (adjust as needed)
+# Set CORS policy: allow only trusted frontend origins (adjust as needed)
 ALLOWED_ORIGINS = [
     "http://localhost:8000",  # Local frontend (React, etc.)
     "http://127.0.0.1:8000",
     "http://localhost:5000",  # chat room url
+    "http://127.0.0.1:5000",
     "chrome-extension://bgkimgppeklbopjofjaaihhhocgnappk",
     # Add your production frontend domain(s) here:
     # "https://your-frontend-domain.com",
@@ -400,7 +402,7 @@ def analyze_message(input: MessageInput):
         if classification_result["classification"] == "General/Chit-Chat":
             response = {
                 "type": "text",
-                "data": "I am BARRIER AI, designed to fact-check claims. The one you selected looks like Chit-Chat."
+                "data": "I am BARRIER AI, designed to fact-check claims. The selected content appears to be casual conversation.",
             }
             return response
 
